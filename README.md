@@ -76,12 +76,6 @@
   <li><strong>Perfect for Vaporwave Enthusiasts:</strong> Designed specifically to complement the vaporwave genre.</li>
 </ul>
 
-<h2>Installation ⚙️</h2>
-<p>You can download the whole <code>index.html</code> file and use it offline, or you can use it directly from GitHub.</p>
-<ul>
-  <li>Upload your music folder and start enjoying the vaporwave vibes!</li>
-</ul>
-
 <p><em>Dynamic equalizer, glowing clocks, and shimmering album art create an immersive experience.</em></p>
 
 <h2>Contributing 🤝</h2>
