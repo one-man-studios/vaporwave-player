@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1200">
+  <title>Vaporwave Music Player</title>
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes grid-animation {
+  0% { transform: perspective(300px) rotateX(60deg) translateY(0); }
+  100% { transform: perspective(300px) rotateX(60deg) translateY(50px); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+body {
+  background: linear-gradient(45deg, #0b0b2e, #1a1a4a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+  overflow: hidden;
+  color: #fff;
+}
+
+.background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.grid {
+  position: absolute;
+  width: 200%;
+  height: 100%;
+  background: 
+    linear-gradient(transparent 0%, #ff00ff82 2%, transparent 3%),
+    linear-gradient(90deg, transparent 0%, #ff00ff82 2%, transparent 3%);
+  background-size: 50px 50px;
+  transform: perspective(900px) rotateX(60deg);
+  animation: grid-animation 10s linear infinite;
+}
+
+.palm-trees {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  background: 
+    radial-gradient(circle at 20% 100%, transparent 0%, transparent 50%, rgba(255, 0, 255, 0.2) 51%, transparent 52%) 0 0/150px 150px,
+    radial-gradient(circle at 80% 100%, transparent 0%, transparent 50%, rgba(0, 255, 255, 0.2) 51%, transparent 52%) 0 0/150px 150px;
+  z-index: 1;
+}
+
+.sun {
+  position: fixed;
+  top: 50px;
+  right: 50px;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(45deg, #ff00ff, #00ffff);
+  border-radius: 50%;
+  animation: pulse 4s ease-in-out infinite;
+  z-index: 1;
+  box-shadow: 0 0 50px rgba(255, 0, 255, 0.5);
+}
+
+.shapes {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.shape {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, rgba(255, 0, 255, 0.3), rgba(0, 255, 255, 0.3));
+  animation: float 6s ease-in-out infinite;
+}
+
+.shape:nth-child(1) {
+  top: 20%;
+  left: 20%;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.shape:nth-child(2) {
+  top: 70%;
+  right: 20%;
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  animation-delay: -2s;
+}
+
+.shape:nth-child(3) {
+  top: 40%;
+  left: 80%;
+  clip-path: circle(50% at 50% 50%);
+  animation-delay: -4s;
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+  z-index: 2;
+}
+
+.playlist-item.active {
+  background-color: rgba(255, 111, 97, 0.3); /* Slightly brighter background */
+  color: #ff6f61; /* Brighter text color */
+  font-weight: bold; /* Bold text */
+  transform: scale(1.02); /* Slight scaling effect */
+  box-shadow: 0 0 10px rgba(255, 111, 97, 0.5); /* Glow effect */
+}
+
+.playlist-item.active:hover {
+  background-color: rgba(255, 111, 97, 0.4); /* Slightly brighter hover effect */
+}
+
+/* Playlist Scrollbar Customization */
+.playlist-container {
+  width: 250px;
+  max-height: 550px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  backdrop-filter: blur(5px);
+}
+
+/* Webkit-based scrollbar (Chrome, Edge, Safari) */
+.playlist-container::-webkit-scrollbar {
+  width: 10px; /* Width of the scrollbar */
+}
+
+.playlist-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1); /* Background of the scrollbar track */
+  border-radius: 10px; /* Rounded corners for the track */
+}
+
+.playlist-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #ff00ff, #00ffff); /* Gradient color for the thumb */
+  border-radius: 10px; /* Rounded corners for the thumb */
+  border: 2px solid rgba(255, 255, 255, 0.2); /* Border around the thumb */
+}
+
+.playlist-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #ff6f61, #ff00ff); /* Hover effect for the thumb */
+}
+
+/* Fallback for Firefox */
+.playlist-container {
+  scrollbar-width: thin; /* Thin scrollbar */
+  scrollbar-color: #ff00ff rgba(255, 255, 255, 0.1); /* Thumb and track colors */
+}
+
+.playlist-header {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ff6f61;
+  text-shadow: 0 0 5px #ff6f61;
+}
+
+.playlist-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  border-radius: 5px;
+  color: #ff6f61;
+  text-shadow: 0 0 5px #ff6f61;
+}
+
+.playlist-item:hover {
+  background-color: rgba(255, 111, 97, 0.2);
+  transform: scale(1.05);
+}
+
+.player-container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 20px;
+  width: 400px;
+  box-shadow: 
+    0 0 20px rgba(255, 0, 255, 0.3),
+    0 0 40px rgba(0, 255, 255, 0.2),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.album-art {
+  width: 250px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border-radius: 10px;
+  background: linear-gradient(45deg, #ff00ff, #00ffff);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+}
+
+.album-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.shimmer-overlay {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
+  animation: shimmer 10s linear infinite;
+}
+
+.file-input-container {
+  background: linear-gradient(45deg, #ff00ff, #00ffff);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-block;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.file-input-container:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+}
+
+#fileInput {
+  display: none;
+}
+
+.track-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.track-name {
+  font-size: 24px;
+  margin-bottom: 5px;
+  text-shadow: 
+    2px 2px 4px rgba(255, 0, 255, 0.5),
+    -2px -2px 4px rgba(0, 255, 255, 0.5);
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.artist-name {
+  font-size: 16px;
+  color: #ff00ff; /* Vaporwave pink */
+  text-shadow: 1px 1px 2px rgba(0, 255, 255, 0.5); /* Glow effect */
+  letter-spacing: 1px;
+  margin-top: 5px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.control-btn {
+  background: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.control-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 0 20px rgba(255, 0, 255, 0.3),
+    0 0 40px rgba(0, 255, 255, 0.2);
+}
+
+.progress-container {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  margin: 20px 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.progress {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #ff00ff, #00ffff);
+  border-radius: 5px;
+  position: relative;
+}
+
+.time-info {
+  display: flex;
+  justify-content: space-between;
+  color: #fff;
+  font-size: 12px;
+  margin-top: 5px;
+  text-shadow: 1px 1px 2px rgba(255, 0, 255, 0.5);
+}
+
+.album-art {
+  width: 250px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border-radius: 10px;
+  background: linear-gradient(45deg, #ff00ff, #00ffff);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+  background-size: contain; /* Ensures the image fits perfectly */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-position: center; /* Centers the image */
+}
+
+.shimmer-overlay {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
+  animation: shimmer 10s linear infinite;
+}
+
+/* Equalizer Container */
+.equalizer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px; /* Height of the equalizer */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2; /* Ensure it's above other elements */
+}
+
+/* Equalizer Styles */
+.equalizer {
+  display: flex;
+  justify-content: space-between; /* Distribute bars evenly across the width */
+  align-items: flex-end;
+  width: 100%; /* Use 90% of the container width */
+  height: 100%;
+}
+
+.equalizer .bar {
+  width: 10px; /* Narrower bars for a rectangular look */
+  height: 0px; /* Default height */
+  background: linear-gradient(45deg, #ff00ff, #00ffff); /* Vaporwave colors */
+  border-radius: 1px; /* Slightly rounded corners for a polished look */
+  transition: height 0.1s ease; /* Smooth transitions for bar height */
+  box-shadow: 0 0 5px rgba(255, 0, 255, 0.8), 0 0 10px rgba(0, 255, 255, 0.6); /* Glow effect */
+}
+
+.shuffle-btn, .repeat-btn {
+  background: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.shuffle-btn.active, .repeat-btn.active {
+  color: #ff6f61;
+  border-color: #ff6f61;
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 111, 97, 0.5);
+}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jsmediatags/dist/jsmediatags.min.js"></script>
+</head>
+<body>
+  <div class="background">
+    <div class="grid"></div>
+  </div>
+
+  <div class="sun"></div>
+  <div class="palm-trees"></div>
+
+  <div class="shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
+
+  <div class="container">
+    <!-- Playlist Section -->
+    <div class="playlist-container">
+      <div class="playlist-header">Playlist</div>
+      <div class="playlist" id="playlist"></div>
+    </div>
+
+    <!-- Player Section -->
+    <div class="player-container">
+      <center>
+        <label for="fileInput" class="file-input-container">
+          <input type="file" id="fileInput" webkitdirectory directory multiple>
+          Choose your music folder
+        </label>
+      </center>
+
+      <!-- Album Art -->
+      <div class="album-art" id="albumArt">
+        <div class="shimmer-overlay"></div>
+      </div>
+
+      <div class="track-info">
+        <div class="track-name">VAPORWAVE PLAYER</div>
+        <div class="artist-name">© 2025 Prana.io | All rights reserved</div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress"></div>
+      </div>
+
+      <div class="time-info">
+        <span class="current-time">0:00</span>
+        <span class="total-time">0:00</span>
+      </div>
+
+      <div class="controls">
+        <button class="control-btn previous">⏮️</button>
+        <button class="control-btn play-btn">▶️</button>
+        <button class="control-btn next">⏭️</button>
+        <button class="shuffle-btn" id="shuffleBtn">🔀</button>
+        <button class="repeat-btn" id="repeatBtn">🔁</button>
+      </div>
+    </div>
+
+    <div class="equalizer-container">
+      <div class="equalizer">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+  </div>
+
+<script>
+const audio = new Audio();
+const playBtn = document.querySelector('.play-btn');
+const progressContainer = document.querySelector('.progress-container');
+const progress = document.querySelector('.progress');
+const currentTimeEl = document.querySelector('.current-time');
+const totalTimeEl = document.querySelector('.total-time');
+const trackNameEl = document.querySelector('.track-name');
+const artistNameEl = document.querySelector('.artist-name'); // Use a single reference
+const albumArtEl = document.getElementById('albumArt');
+const fileInput = document.getElementById('fileInput');
+const playlistDiv = document.getElementById('playlist');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const repeatBtn = document.getElementById('repeatBtn');
+const prevBtn = document.querySelector('.previous');
+const nextBtn = document.querySelector('.next');
+
+let files = [];
+let currentTrackIndex = 0;
+let isShuffleOn = false;
+let isRepeatOn = false;
+let shuffledPlaylist = [];
+
+// Web Audio API Setup (declared only once)
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let sourceNode, analyserNode, dataArray, bufferLength;
+
+function setupAudioAnalysis() {
+  // Create an audio source node
+  sourceNode = audioContext.createMediaElementSource(audio);
+
+  // Create an analyser node
+  analyserNode = audioContext.createAnalyser();
+  analyserNode.fftSize = 256; // Determines the resolution of the frequency data
+  bufferLength = analyserNode.frequencyBinCount;
+  dataArray = new Uint8Array(bufferLength);
+
+  // Connect the source to the analyser and then to the destination
+  sourceNode.connect(analyserNode);
+  analyserNode.connect(audioContext.destination);
+}
+
+function updateEqualizer() {
+  requestAnimationFrame(updateEqualizer);
+
+  // Get frequency data and update equalizer bars
+  analyserNode.getByteFrequencyData(dataArray);
+  const bars = document.querySelectorAll('.equalizer .bar');
+  bars.forEach((bar, index) => {
+    const frequencyValue = dataArray[index] || 0;
+    const maxHeight = 40;
+    const barHeight = Math.max(10, (frequencyValue / 255) * maxHeight);
+    bar.style.height = `${barHeight}px`;
+  });
+}
+
+// Update progress bar animation
+function updateProgress() {
+  requestAnimationFrame(updateProgress);
+}
+
+// Format time as MM:SS
+function formatTime(time) {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60)
+    .toString()
+    .padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+// Shuffle an array using the Fisher-Yates algorithm
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+// Highlight the current track in the playlist
+function highlightCurrentTrack() {
+  const allTracks = document.querySelectorAll('.playlist-item');
+  allTracks.forEach((track, index) => {
+    track.classList.toggle('active', index === currentTrackIndex);
+  });
+
+  // Scroll the active track into view
+  const activeTrack = document.querySelector('.playlist-item.active');
+  if (activeTrack) {
+    activeTrack.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// Populate the playlist UI
+function loadPlaylist() {
+  playlistDiv.innerHTML = '';
+  const playlist = isShuffleOn ? shuffledPlaylist : files;
+  playlist.forEach((file, index) => {
+    const trackDiv = document.createElement('div');
+    trackDiv.textContent = file.name.split('.').slice(0, -1).join('.');
+    trackDiv.classList.add('playlist-item');
+    trackDiv.addEventListener('click', () => loadTrack(index));
+    playlistDiv.appendChild(trackDiv);
+  });
+  highlightCurrentTrack();
+}
+
+// Extract metadata (e.g. artist name) using jsmediatags
+function extractMetadata(file) {
+  return new Promise((resolve) => {
+    jsmediatags.read(file, {
+      onSuccess: (tag) => {
+        const artist = tag.tags.artist || 'Unknown Artist';
+        resolve(artist);
+      },
+      onError: (error) => {
+        console.error('Error reading metadata:', error);
+        resolve('Unknown Artist');
+      }
+    });
+  });
+}
+
+// Extract album art using jsmediatags
+function extractAlbumArt(file) {
+  jsmediatags.read(file, {
+    onSuccess: (tag) => {
+      const tags = tag.tags;
+      if (tags && tags.picture) {
+        const picture = tags.picture;
+        const base64String = arrayBufferToBase64(picture.data);
+        albumArtEl.style.backgroundImage = `url(data:${picture.format};base64,${base64String})`;
+      } else {
+        albumArtEl.style.backgroundImage = "url('https://via.placeholder.com/250')";
+      }
+    },
+    onError: (error) => {
+      console.error('Error reading metadata:', error);
+      albumArtEl.style.backgroundImage = "url('https://via.placeholder.com/250')";
+    }
+  });
+}
+
+// Convert ArrayBuffer to Base64
+function arrayBufferToBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
+
+// Unified loadTrack function (removes duplicate definitions)
+async function loadTrack(index) {
+  currentTrackIndex = index;
+  const file = isShuffleOn ? shuffledPlaylist[currentTrackIndex] : files[currentTrackIndex];
+  audio.src = URL.createObjectURL(file);
+  trackNameEl.textContent = file.name.split('.').slice(0, -1).join('');
+
+  // Extract metadata (artist name) and update UI
+  const artist = await extractMetadata(file);
+  artistNameEl.textContent = artist;
+
+  // Extract album art
+  extractAlbumArt(file);
+
+  audio.load();
+  playBtn.textContent = '⏸️';
+  updateProgress();
+  highlightCurrentTrack();
+
+  // Play the track
+  audio.play();
+  playBtn.classList.add('active');
+
+  // Set up and start the equalizer
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  setupAudioAnalysis();
+  updateEqualizer();
+}
+
+// Event Listeners
+
+// Load files when a folder is selected
+fileInput.addEventListener('change', (event) => {
+  const folderName = event.target.files[0]?.webkitRelativePath.split('/')[0] || 'My Playlist';
+  document.querySelector('.playlist-header').textContent = `${folderName} Playlist`;
+  files = Array.from(event.target.files).filter(file => file.type.startsWith('audio/'));
+  if (files.length > 0) {
+    loadPlaylist();
+    loadTrack(0);
+  }
+});
+
+// Update progress bar as the audio plays
+audio.addEventListener('timeupdate', () => {
+  if (audio.duration) {
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progress.style.width = `${percent}%`;
+    currentTimeEl.textContent = formatTime(audio.currentTime);
+  }
+});
+
+// Update total duration when metadata is loaded
+audio.addEventListener('loadedmetadata', () => {
+  totalTimeEl.textContent = formatTime(audio.duration);
+});
+
+// Handle track end (repeat or move to next)
+audio.addEventListener('ended', () => {
+  if (isRepeatOn) {
+    audio.currentTime = 0;
+    audio.play();
+  } else {
+    const playlistLength = isShuffleOn ? shuffledPlaylist.length : files.length;
+    currentTrackIndex = (currentTrackIndex + 1) % playlistLength;
+    loadTrack(currentTrackIndex);
+  }
+});
+
+// Seek functionality when clicking the progress container
+progressContainer.addEventListener('click', (e) => {
+  const rect = progressContainer.getBoundingClientRect();
+  const clickPosition = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = clickPosition * audio.duration;
+});
+
+// Toggle shuffle mode
+shuffleBtn.addEventListener('click', () => {
+  isShuffleOn = !isShuffleOn;
+  shuffleBtn.classList.toggle('active', isShuffleOn);
+
+  if (isShuffleOn) {
+    shuffledPlaylist = [...files];
+    shuffleArray(shuffledPlaylist);
+    currentTrackIndex = 0;
+  } else {
+    shuffledPlaylist = [];
+    // Attempt to match the current track in the original list
+    const currentFile = files.find(file => URL.createObjectURL(file) === audio.src);
+    currentTrackIndex = currentFile ? files.indexOf(currentFile) : 0;
+  }
+  loadPlaylist();
+  loadTrack(currentTrackIndex);
+});
+
+// Toggle repeat mode
+repeatBtn.addEventListener('click', () => {
+  isRepeatOn = !isRepeatOn;
+  repeatBtn.classList.toggle('active', isRepeatOn);
+});
+
+// Previous track button
+prevBtn.addEventListener('click', () => {
+  const playlistLength = isShuffleOn ? shuffledPlaylist.length : files.length;
+  currentTrackIndex = (currentTrackIndex - 1 + playlistLength) % playlistLength;
+  loadTrack(currentTrackIndex);
+});
+
+// Next track button
+nextBtn.addEventListener('click', () => {
+  const playlistLength = isShuffleOn ? shuffledPlaylist.length : files.length;
+  currentTrackIndex = (currentTrackIndex + 1) % playlistLength;
+  loadTrack(currentTrackIndex);
+});
+
+// Play/Pause functionality
+playBtn.addEventListener('click', () => {
+  if (audio.paused) {
+    audio.play();
+    playBtn.textContent = '⏸️';
+    playBtn.classList.add('active');
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+  } else {
+    audio.pause();
+    playBtn.textContent = '▶️';
+    playBtn.classList.remove('active');
+    if (audioContext.state === 'running') {
+      audioContext.suspend();
+    }
+  }
+});
+
+</script>
+</body>
+</html>
