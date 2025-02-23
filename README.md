@@ -78,6 +78,9 @@
 
 <p><em>Dynamic equalizer, glowing clocks, and shimmering album art create an immersive experience.</em></p>
 
+<h2>Installation ⚙️</h2>
+<p>The Installation is very easy and you can use it in offline environment. Just click and download the html-file named "vaporwave-player.html" and then upload a folder which contains audio files and then vibe 😎 </p>
+
 <h2>Contributing 🤝</h2>
 <p>Contributions are welcome! If you’d like to improve the Vaporwave Player or fix any issues, feel free to submit a pull request. Please ensure your changes align with the vaporwave aesthetic and functionality.</p>
 
